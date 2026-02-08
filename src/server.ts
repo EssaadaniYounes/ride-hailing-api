@@ -7,7 +7,11 @@ import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 
+import { DriverOfferService } from './domain/ride/matching/driver-offer.service';
+
 const app = createServer();
+
+DriverOfferService.initialize();
 
 app.use(cors({
     origin: config.server.corsOrigin,

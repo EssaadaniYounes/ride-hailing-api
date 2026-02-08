@@ -5,6 +5,7 @@ import logger from "../../lib/logger.lib";
 import { prisma } from "../../lib/prisma.lib";
 import { RideEstimationService } from "./estimation/ride-estimation.service";
 import { CreateRideDto } from "./ride.schema";
+import { DriverOfferService } from "./matching/driver-offer.service";
 
 export const RideService = {
     async estimate(payload: CreateRideDto, userId: string) {
@@ -69,6 +70,11 @@ export const RideService = {
             logger.info(`Created ride ${ride.id} for user ${userId}`);
             await redis.incr(RideService.rideCreationsKeyForUser(userId));
             logger.info(`Updated key ${RideService.rideCreationsKeyForUser(userId)} for user ${userId}`);
+
+            DriverOfferService.startMatching(ride.id).catch((err: unknown) => {
+                logger.error(`Error starting matching for ride ${ride.id}:`, err);
+            });
+
             return ride
         } catch (error) {
             logger.error(`Error creating ride for user ${userId}: ${error}`);
