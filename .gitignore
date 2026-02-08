@@ -4,3 +4,7 @@ node_modules
 /generated/prisma
 
 /generated/prisma
+dist/
+logs/
+*.log
+.DS_Store

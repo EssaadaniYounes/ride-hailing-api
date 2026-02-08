@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from './app-error.base';
-// import { logger } from './infra/logger';
+import logger from '../lib/logger.lib';
 
 export function errorHandler(
     err: Error,
@@ -16,12 +16,12 @@ export function errorHandler(
         });
     }
 
-    //   logger.error({
-    //     message: err.message,
-    //     stack: err.stack,
-    //     path: req.path,
-    //     method: req.method,
-    //   });
+      logger.error({
+        message: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method,
+      });
 
     return res.status(500).json({
         error: 'Internal server error',
