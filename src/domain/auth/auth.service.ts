@@ -3,12 +3,13 @@ import { Role } from "../../config/role.enum";
 import { BadRequestError, NotFoundError } from "../../errors/domain-errors.base";
 import logger from "../../lib/logger.lib";
 import { prisma } from "../../lib/prisma.lib";
-import { LoginPayloadDto, RegisterPayloadDto } from "./auth.types";
+import { LoginPayloadDto, RegisterPayloadDto } from "./auth.schemas";
 import { compare, hash } from "bcrypt";
 import jwt, { SignOptions } from 'jsonwebtoken';
 export const AuthService = {
     async register(payload: RegisterPayloadDto) {
         logger.info(`Registering user ${payload.email}`);
+
         const userExist = await prisma.user.count({
             where: {
                 email: payload.email
@@ -16,18 +17,10 @@ export const AuthService = {
         });
 
         if (userExist) {
-            throw new BadRequestError('User already exist');
+            throw new BadRequestError('User already exists');
         }
-        if (!payload.password) {
-            throw new BadRequestError('Password is required');
-        }
-        if (!payload.email) {
-            throw new BadRequestError('Email is required');
-        }
-        if (![Role.DRIVER, Role.USER].includes(payload.role)) {
-            throw new BadRequestError('Invalid role, must be USER or DRIVER');
-        }
-        const hashedPassword = await hash(payload.password, 10);
+
+        const hashedPassword = await hash(payload.password, config.bcrypt.saltRounds);
         const user = await prisma.user.create({
             data: {
                 email: payload.email,
@@ -46,21 +39,23 @@ export const AuthService = {
                 email: payload.email
             }
         });
+
         if (!user) {
-            throw new NotFoundError("Invalid email!");
+            throw new BadRequestError('Invalid credentials');
         }
 
-        const isItSamePassword = await compare(payload.password, user.password);
+        const isPasswordValid = await compare(payload.password, user.password);
 
-        if (!isItSamePassword) {
-            throw new BadRequestError("Invalid password!");
+        if (!isPasswordValid) {
+            throw new BadRequestError('Invalid credentials');
         }
+
         return user
     },
 
-    async generateToken<T extends { id: string }>(user: T, expiresIn: SignOptions['expiresIn'] = '1h') {
+    async generateToken(payload: { sub: string; role?: string }, expiresIn: SignOptions['expiresIn'] = '1h') {
         return jwt.sign(
-            user,
+            payload,
             config.jwt.secret,
             { expiresIn } as SignOptions
         );

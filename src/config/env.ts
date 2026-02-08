@@ -7,6 +7,7 @@ type IConfig = {
     server: {
         port: number;
         nodeEnv: NodeEnv;
+        corsOrigin: string;
     },
     redis: {
         port: number
@@ -16,6 +17,9 @@ type IConfig = {
     },
     jwt: {
         secret: string
+    },
+    bcrypt: {
+        saltRounds: number
     }
 }
 
@@ -23,9 +27,10 @@ type IConfig = {
 export const config: IConfig = {
     server: {
         port: numberEnv('PORT', 3000),
-        nodeEnv: nodeEnv()
+        nodeEnv: nodeEnv(),
+        corsOrigin: process.env.CORS_ORIGIN || '*'
     },
-    redis:{
+    redis: {
         port: numberEnv('REDIS_PORT', 6379)
     },
     database: {
@@ -33,5 +38,8 @@ export const config: IConfig = {
     },
     jwt: {
         secret: required('JWT_SECRET')
+    },
+    bcrypt: {
+        saltRounds: numberEnv('BCRYPT_SALT_ROUNDS', 12)
     }
 };

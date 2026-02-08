@@ -3,7 +3,15 @@
 node_modules
 /generated/prisma
 
-/generated/prisma
+# Build output
+dist/
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
 dist/
 logs/
 *.log
