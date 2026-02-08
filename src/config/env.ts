@@ -10,7 +10,8 @@ type IConfig = {
         corsOrigin: string;
     },
     redis: {
-        port: number
+        port: number;
+        password?: string;
     },
     database: {
         url: string
@@ -20,6 +21,12 @@ type IConfig = {
     },
     bcrypt: {
         saltRounds: number
+    },
+    rides: {
+        maxAllowedRequestForUser: number,
+        mapBoxApiKey: string,
+        mapBoxBaseURL: string,
+        pricePerMeter: number
     }
 }
 
@@ -31,7 +38,8 @@ export const config: IConfig = {
         corsOrigin: process.env.CORS_ORIGIN || '*'
     },
     redis: {
-        port: numberEnv('REDIS_PORT', 6379)
+        port: numberEnv('REDIS_PORT', 6379),
+        password: process.env.REDIS_PASSWORD
     },
     database: {
         url: required('DATABASE_URL')
@@ -41,5 +49,11 @@ export const config: IConfig = {
     },
     bcrypt: {
         saltRounds: numberEnv('BCRYPT_SALT_ROUNDS', 12)
+    },
+    rides: {
+        maxAllowedRequestForUser: numberEnv('MAX_ALLOWED_REQUEST_FOR_USER', 3),
+        mapBoxApiKey: required('MAP_BOX_KEY'),
+        mapBoxBaseURL: 'https://api.mapbox.com/directions-matrix',
+        pricePerMeter: numberEnv('PRICE_PER_METER', 0.1)
     }
 };

@@ -78,7 +78,7 @@ model Ride {
   etaMinutes Int
   price      Float
 
-  state     RideState
+  state     RideState 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
