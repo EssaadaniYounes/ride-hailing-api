@@ -15,5 +15,28 @@ export const RideController = {
                 status: ride.state
             }
         })
+    },
+
+    async accept(req: AuthRequest, res: Response) {
+        const { id } = req.params;
+        const userId = req.user?.id!;
+
+        await RideService.accept(id as string, userId);
+
+        return res.status(200).json({
+            message: 'Ride accepted successfully'
+        });
+    },
+
+    async cancel(req: AuthRequest, res: Response) {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const user = req.user!;
+
+        await RideService.cancel(id as string, { id: user.id, role: user.role as string }, reason);
+
+        return res.status(200).json({
+            message: 'Ride cancelled successfully'
+        });
     }
 }

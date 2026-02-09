@@ -9,5 +9,7 @@ import { authorize } from "../../middleware/authorize.middleware";
 import { Role } from "../../config/role.enum";
 
 router.post("/create", authenticate, authorize(Role.USER), validate(CreateRideSchema), wrapAsync(RideController.create));
+router.patch("/:id/accept", authenticate, authorize(Role.DRIVER), wrapAsync(RideController.accept));
+router.patch("/:id/cancel", authenticate, authorize(Role.USER, Role.DRIVER), wrapAsync(RideController.cancel));
 
 export default router;

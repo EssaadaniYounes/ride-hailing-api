@@ -1,11 +1,13 @@
 import { config } from "../../config/env";
-import { BadRequestError } from "../../errors/domain-errors.base";
+import { BadRequestError, NotFoundError } from "../../errors/domain-errors.base";
 import { redis } from "../../factories/redis.factory";
 import logger from "../../lib/logger.lib";
 import { prisma } from "../../lib/prisma.lib";
 import { RideEstimationService } from "./estimation/ride-estimation.service";
 import { CreateRideDto } from "./ride.schema";
 import { DriverOfferService } from "./matching/driver-offer.service";
+import { RideState, RideEventType, UserRole } from "../../generated/prisma/client";
+import { RideStateMachine } from "./state-machine";
 
 export const RideService = {
     async estimate(payload: CreateRideDto, userId: string) {
@@ -81,6 +83,86 @@ export const RideService = {
             throw error
         }
     },
+
+    async accept(rideId: string, userId: string) {
+        const driver = await prisma.driver.findUnique({
+            where: { userId }
+        });
+
+        if (!driver) {
+            throw new NotFoundError('Driver profile not found');
+        }
+
+        const success = await DriverOfferService.acceptOffer(rideId, driver.id);
+        if (!success) {
+            throw new BadRequestError('Failed to accept ride: Offer expired or invalid');
+        }
+
+        return success;
+    },
+
+    async cancel(rideId: string, user: { id: string; role: string }, reason?: string) {
+        const ride = await prisma.ride.findUnique({
+            where: { id: rideId },
+            include: { driver: true }
+        });
+
+        if (!ride) {
+            throw new NotFoundError('Ride not found');
+        }
+   
+        const isRider = ride.userId === user.id;
+        const isAssignedDriver = ride.driver?.userId === user.id;
+
+        if (!isRider && !isAssignedDriver) {
+            throw new BadRequestError('You are not authorized to cancel this ride');
+        }
+
+        RideStateMachine.validateTransition(ride.state, RideState.CANCELLED);
+
+        if (ride.state !== RideState.MATCHING && !reason) {
+            throw new BadRequestError('Cancellation reason is required after driver assignment');
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.ride.update({
+                where: { id: rideId },
+                data: { state: RideState.CANCELLED }
+            });
+
+            if (reason) {
+                await tx.cancellation.create({
+                    data: {
+                        rideId,
+                        cancelledBy: user.role as UserRole,
+                        reason
+                    }
+                });
+            }
+
+            if (ride.driverId) {
+                await tx.driver.update({
+                    where: { id: ride.driverId },
+                    data: { isAvailable: true }
+                });
+            }
+
+            await tx.rideEvent.create({
+                data: {
+                    rideId,
+                    type: RideEventType.RIDE_CANCELLED,
+                    payload: {
+                        cancelledBy: user.id,
+                        reason
+                    } as any
+                }
+            });
+        });
+
+        logger.info(`Ride ${rideId} cancelled by ${user.role} ${user.id}`);
+        return true;
+    },
+
     rideCreationsKeyForUser(userId: string) {
         return `ride-creations-${userId}`;
     },
