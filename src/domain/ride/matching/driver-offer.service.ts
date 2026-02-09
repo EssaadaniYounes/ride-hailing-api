@@ -4,8 +4,9 @@ import { prisma } from '../../../lib/prisma.lib';
 import { RideState, RideEventType } from '../../../generated/prisma/client';
 import { DriverMatchingService } from './driver-matching.service';
 import { RideStateMachine } from '../state-machine';
+import { config } from '../../../config/env';
 
-const OFFER_TTL_SECONDS = 15;
+const OFFER_TTL_SECONDS = config.rides.offerTTLSeconds;
 
 export const DriverOfferService = {
     async initialize() {

@@ -26,7 +26,8 @@ type IConfig = {
         maxAllowedRequestForUser: number,
         mapBoxApiKey: string,
         mapBoxBaseURL: string,
-        pricePerMeter: number
+        pricePerMeter: number,
+        offerTTLSeconds: number
     }
 }
 
@@ -54,6 +55,7 @@ export const config: IConfig = {
         maxAllowedRequestForUser: numberEnv('MAX_ALLOWED_REQUEST_FOR_USER', 3),
         mapBoxApiKey: required('MAP_BOX_KEY'),
         mapBoxBaseURL: 'https://api.mapbox.com/directions-matrix',
-        pricePerMeter: numberEnv('PRICE_PER_METER', 0.1)
+        pricePerMeter: numberEnv('PRICE_PER_METER', 0.1),
+        offerTTLSeconds: numberEnv('OFFER_TTL_SECONDS', 60)
     }
 };
