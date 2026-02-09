@@ -110,7 +110,7 @@ export const RideService = {
         if (!ride) {
             throw new NotFoundError('Ride not found');
         }
-   
+
         const isRider = ride.userId === user.id;
         const isAssignedDriver = ride.driver?.userId === user.id;
 
@@ -161,6 +161,74 @@ export const RideService = {
 
         logger.info(`Ride ${rideId} cancelled by ${user.role} ${user.id}`);
         return true;
+    },
+
+    async getHistory(userId: string) {
+        return prisma.ride.findMany({
+            where: { userId },
+            include: {
+                driver: true,
+                events: true
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+    },
+
+    async getSharedStatus(rideId: string) {
+        const ride = await prisma.ride.findUnique({
+            where: { id: rideId },
+            include: {
+                driver: {
+                    include: {
+                        user: {
+                            select: {
+                                email: true
+                            }
+                        }
+                    }
+                },
+                events: {
+                    orderBy: {
+                        createdAt: 'desc'
+                    }
+                }
+            }
+        });
+
+        if (!ride) {
+            throw new BadRequestError('Ride not found');
+        }
+
+        return {
+            id: ride.id,
+            state: ride.state,
+            pickupLocation: {
+                lat: ride.pickupLat,
+                lng: ride.pickupLng
+            },
+            dropoffLocation: {
+                lat: ride.dropoffLat,
+                lng: ride.dropoffLng
+            },
+            etaMinutes: ride.etaMinutes,
+            distanceKm: ride.distanceKm,
+            createdAt: ride.createdAt,
+            driver: ride.driver ? {
+                name: ride.driver.user.email.split('@')[0],
+                currentLocation: {
+                    lat: ride.driver.lat,
+                    lng: ride.driver.lng
+                }
+            } : null,
+            price: ride.price,
+            events: ride.events.map(e => ({
+                type: e.type,
+                createdAt: e.createdAt,
+                meta: e.payload
+            }))
+        };
     },
 
     rideCreationsKeyForUser(userId: string) {

@@ -11,5 +11,7 @@ import { Role } from "../../config/role.enum";
 router.post("/create", authenticate, authorize(Role.USER), validate(CreateRideSchema), wrapAsync(RideController.create));
 router.patch("/:id/accept", authenticate, authorize(Role.DRIVER), wrapAsync(RideController.accept));
 router.patch("/:id/cancel", authenticate, authorize(Role.USER, Role.DRIVER), wrapAsync(RideController.cancel));
+router.patch("/:id/status", wrapAsync(RideController.status));
+router.get("/history", authenticate, authorize(Role.USER, Role.DRIVER), wrapAsync(RideController.getHistory));
 
 export default router;

@@ -24,7 +24,8 @@ export const RideController = {
         await RideService.accept(id as string, userId);
 
         return res.status(200).json({
-            message: 'Ride accepted successfully'
+            message: 'Ride accepted successfully',
+            data: null,
         });
     },
 
@@ -36,7 +37,24 @@ export const RideController = {
         await RideService.cancel(id as string, { id: user.id, role: user.role as string }, reason);
 
         return res.status(200).json({
-            message: 'Ride cancelled successfully'
+            message: 'Ride cancelled successfully',
+            data: null,
+        });
+    },
+
+    async getHistory(req: AuthRequest, res: Response) {
+        const userId = req.user?.id!;
+        const history = await RideService.getHistory(userId);
+        return res.status(200).json({
+            data: history
+        });
+    },
+    async status(req: AuthRequest, res: Response) {
+        const rideId = req.params.id;
+        //We can here have a separate feature for DRIVER/USER To generate a sharable link.
+        const rideStatus = await RideService.getSharedStatus(rideId as string);
+        return res.status(200).json({
+            data: rideStatus
         });
     }
 }
