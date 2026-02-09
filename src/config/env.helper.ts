@@ -25,6 +25,17 @@ export function numberEnv(key: string, defaultValue: number): number {
   return parsed;
 }
 
+export function booleanEnv(key: string, defaultValue: boolean): boolean {
+  const value = process.env[key];
+  if (!value) return defaultValue;
+
+  const normalized = value.toLowerCase();
+  if (normalized === 'true' || normalized === '1') return true;
+  if (normalized === 'false' || normalized === '0') return false;
+
+  throw new Error(`Invalid boolean for env var: ${key}`);
+}
+
 export function nodeEnv(): NodeEnv {
   const env = process.env.NODE_ENV ?? 'development';
   if (!NODE_ENVS.includes(env as NodeEnv)) {

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { nodeEnv, NodeEnv, numberEnv, required } from './env.helper';
+import { nodeEnv, NodeEnv, numberEnv, required, booleanEnv } from './env.helper';
 
 dotenv.config();
 
@@ -28,6 +28,10 @@ type IConfig = {
         mapBoxBaseURL: string,
         pricePerMeter: number,
         offerTTLSeconds: number
+    },
+    elasticsearch: {
+        enableElasticSearch: boolean,
+        url: string
     }
 }
 
@@ -57,5 +61,9 @@ export const config: IConfig = {
         mapBoxBaseURL: 'https://api.mapbox.com/directions-matrix',
         pricePerMeter: numberEnv('PRICE_PER_METER', 0.1),
         offerTTLSeconds: numberEnv('OFFER_TTL_SECONDS', 60)
+    },
+    elasticsearch: {
+        enableElasticSearch: booleanEnv('ENABLE_ELASTIC_SEARCH', false),
+        url: process.env.ELASTICSEARCH_URL || 'http://localhost:9200'
     }
 };

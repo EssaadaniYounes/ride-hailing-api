@@ -1,18 +1,18 @@
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 import { config } from '../config/env';
-// import { ElasticsearchTransport } from "winston-elasticsearch";
+import { ElasticsearchTransport } from "winston-elasticsearch";
 const { format } = winston;
 const { combine, timestamp, label, printf } = format;
 
 
-// const esTransport = new ElasticsearchTransport({
-//   level: "info",
-//   clientOpts: {
-//     node: process.env.ELASTICSEARCH_URL || "http://localhost:9200",
-//   },
-//   indexPrefix: "api-logs",
-// });
+const esTransport = config.elasticsearch.enableElasticSearch ? new ElasticsearchTransport({
+  level: "info",
+  clientOpts: {
+    node: config.elasticsearch.url,
+  },
+  indexPrefix: "api-logs",
+}) : null;
 
 const transport = new winston.transports.DailyRotateFile({
   filename: 'logs/log-%DATE%.log',
@@ -35,11 +35,11 @@ const logger = winston.createLogger({
   ),
   transports: [
     transport,
-    // esTransport
+    ...(config.elasticsearch.enableElasticSearch && esTransport ? [esTransport] : [])
   ]
 });
 
-if(config.server.nodeEnv === 'development') {
+if (config.server.nodeEnv === 'development') {
   logger.add(new winston.transports.Console());
 }
 
